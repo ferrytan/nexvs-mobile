@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Verify formatting
+      run: dart format --set-exit-if-changed .
+
+    - name: Analyze code
+      run: flutter analyze
+
+    - name: Run tests
+      run: flutter test --coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: coverage/lcov.info
+
+    - name: Build Android APK
+      run: flutter build apk --debug
+
+    - name: Build iOS (verify only)
+      run: flutter build ios --debug --no-codesign
