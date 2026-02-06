@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../core/utils/responsive.dart';
+import '../../widgets/common/adaptive_navigation.dart';
+import '../../widgets/common/empty_state_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,38 +23,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveNavigation(
+      currentIndex: _currentIndex,
+      onDestinationSelected: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      destinations: NexvsDestinations.all,
       body: _pages[_currentIndex],
-      bottomNavigationBar: NavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.event_outlined),
-            selectedIcon: Icon(Icons.event),
-            label: 'Events',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.emoji_events_outlined),
-            selectedIcon: Icon(Icons.emoji_events),
-            label: 'Tournaments',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.build_outlined),
-            selectedIcon: Icon(Icons.build),
-            label: 'Builds',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outlined),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
     );
   }
 }
@@ -60,34 +41,85 @@ class _EventsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Events'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Open search
-            },
+    return ResponsiveBuilder(
+      builder: (context, screenType) {
+        final useSliverAppBar = screenType.isDesktop;
+
+        final body = MaxWidthContainer(
+          padding: Responsive.paddingForScreen(screenType),
+          child: Column(
+            children: [
+              // Search and filter bar
+              if (screenType.isDesktop) _DesktopSearchBar(),
+              // Content
+              Expanded(
+                child: Center(
+                  child: EmptyStateWidget(
+                    icon: Icons.event_outlined,
+                    title: 'No Events Yet',
+                    subtitle: 'Events will be displayed here',
+                    actionLabel: screenType.isMobile ? null : 'Create Event',
+                  ),
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Open filter
-            },
+        );
+
+        if (useSliverAppBar) {
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                title: const Text('Events'),
+                floating: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () {
+                      // TODO: Open search
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    onPressed: () {
+                      // TODO: Open filter
+                    },
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(child: body),
+            ],
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Events'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  // TODO: Open search
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () {
+                  // TODO: Open filter
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: const Center(
-        child: Text('Events will be displayed here'),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Create event
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Create Event'),
-      ),
+          body: body,
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              // TODO: Create event
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Create Event'),
+          ),
+        );
+      },
     );
   }
 }
@@ -97,27 +129,40 @@ class _TournamentsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tournaments'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Open search
-            },
+    return ResponsiveBuilder(
+      builder: (context, screenType) {
+        final body = MaxWidthContainer(
+          padding: Responsive.paddingForScreen(screenType),
+          child: Center(
+            child: EmptyStateWidget(
+              icon: Icons.emoji_events_outlined,
+              title: 'No Tournaments Yet',
+              subtitle: 'Tournaments will be displayed here',
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Open filter
-            },
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Tournaments'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  // TODO: Open search
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () {
+                  // TODO: Open filter
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: const Center(
-        child: Text('Tournaments will be displayed here'),
-      ),
+          body: body,
+        );
+      },
     );
   }
 }
@@ -127,27 +172,44 @@ class _BuildsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Builds'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Open search
-            },
+    return ResponsiveBuilder(
+      builder: (context, screenType) {
+        final columns = Responsive.gridColumns(screenType);
+        final body = MaxWidthContainer(
+          padding: Responsive.paddingForScreen(screenType),
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              childAspectRatio: screenType.isMobile ? 0.8 : 1.2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: 0,
+            itemBuilder: (context, index) => const SizedBox.shrink(),
           ),
-        ],
-      ),
-      body: const Center(
-        child: Text('Builds will be displayed here'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Create build
-        },
-        child: const Icon(Icons.add),
-      ),
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Builds'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  // TODO: Open search
+                },
+              ),
+            ],
+          ),
+          body: body,
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              // TODO: Create build
+            },
+            child: const Icon(Icons.add),
+          ),
+        );
+      },
     );
   }
 }
@@ -157,20 +219,61 @@ class _ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
+    return ResponsiveBuilder(
+      builder: (context, screenType) {
+        final body = MaxWidthContainer(
+          padding: Responsive.paddingForScreen(screenType),
+          child: Center(
+            child: EmptyStateWidget(
+              icon: Icons.person_outlined,
+              title: 'Profile',
+              subtitle: 'User profile will be displayed here',
+            ),
+          ),
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Profile'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () {
+                  // TODO: Open settings
+                },
+              ),
+            ],
+          ),
+          body: body,
+        );
+      },
+    );
+  }
+}
+
+/// Desktop search bar for top of content areas
+class _DesktopSearchBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: SearchBar(
+              hintText: 'Search...',
+              leading: const Icon(Icons.search),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          FilledButton.tonalIcon(
             onPressed: () {
-              // TODO: Open settings
+              // TODO: Open filter
             },
+            icon: const Icon(Icons.filter_list),
+            label: const Text('Filter'),
           ),
         ],
-      ),
-      body: const Center(
-        child: Text('Profile will be displayed here'),
       ),
     );
   }

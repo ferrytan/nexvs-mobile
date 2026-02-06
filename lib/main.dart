@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/di/injection.dart' as di;
+import 'core/utils/responsive.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,7 @@ class NexvsApp extends StatelessWidget {
       designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
+      useInheritedMediaQuery: true,
       builder: (_, child) {
         return MaterialApp(
           title: 'NEXVS - Connect & VS',
@@ -25,8 +27,35 @@ class NexvsApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
-          home: const SplashScreen(),
+          home: const AppWrapper(child: SplashScreen()),
         );
+      },
+    );
+  }
+}
+
+/// Wrapper that provides constrained width on larger screens
+class AppWrapper extends StatelessWidget {
+  final Widget child;
+
+  const AppWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveBuilder(
+      builder: (context, screenType) {
+        // On desktop/wide, constrain width and center
+        if (screenType.isDesktop) {
+          return Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              width: double.infinity,
+              child: child,
+            ),
+          );
+        }
+        // On mobile/tablet, use full width
+        return child;
       },
     );
   }
@@ -47,27 +76,39 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.videogame_asset,
-              size: 100.sp,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            SizedBox(height: 24.h),
-            Text(
-              'NEXVS',
-              style: TextStyle(
-                fontSize: 48.sp,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 4,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Connect & VS',
-              style: TextStyle(
-                fontSize: 16.sp,
-                letterSpacing: 2,
-              ),
+            ResponsiveBuilder(
+              builder: (context, screenType) {
+                final iconSize = screenType.isMobile ? 80.sp : 100.sp;
+                final titleSize = screenType.isMobile ? 40.sp : 56.sp;
+                final subtitleSize = screenType.isMobile ? 14.sp : 18.sp;
+
+                return Column(
+                  children: [
+                    Icon(
+                      Icons.videogame_asset,
+                      size: iconSize,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    SizedBox(height: 24.h),
+                    Text(
+                      'NEXVS',
+                      style: TextStyle(
+                        fontSize: titleSize,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Connect & VS',
+                      style: TextStyle(
+                        fontSize: subtitleSize,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

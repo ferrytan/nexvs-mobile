@@ -1,5 +1,32 @@
 # NEXVS - Master Instructions
 
+---
+
+## Important Instructions for Claude Agent
+
+### DO:
+- Always read relevant files before editing
+- Use `TodoWrite` for multi-step tasks
+- Prefer parallel tool calls when independent
+- Search with `Task` tool + Explore agent for open-ended codebase exploration
+- Update THIS FILE when new decisions are made
+
+### DON'T:
+- Run tests/build without user request
+- **Run the app (flutter run) - the user prefers to run it themselves to see logs in terminal**
+- Make "improvements" beyond what's asked
+- Add features/refactoring unprompted
+- Commit code without explicit user request
+- Use `sed`, `awk`, `echo` for file operations (use Read/Edit/Write instead)
+
+### Git Workflow:
+- Only create commits when user asks
+- Format: `git commit -m "$(cat <<'EOF'\n...\nEOF\n)"`
+- NEVER force push to main/master
+- Use `gh` CLI for GitHub operations
+
+---
+
 ## Project Overview
 
 **NEXVS (Connect & VS)** is a mobile platform for hobbyists (Beyblade, Tamiya, Gunpla, etc.) to:
@@ -13,10 +40,11 @@
 | Layer | Technology |
 |-------|-----------|
 | Framework | Flutter 3.24.0 (Dart 3.5.0) |
-| Platforms | Android, iOS (NO web, NO desktop) |
+| Platforms | Android, iOS, Web |
+| Design | Adaptive/Responsive (mobile + desktop) |
 | State Management | GetIt (Service Locator) |
 | DI | Injectable |
-| Local Storage | ObjectBox |
+| Local Storage | ObjectBox (mobile), SharedPreferences (web) |
 | Network | Dio + Retrofit |
 | CI/CD | GitHub Actions |
 
@@ -263,6 +291,11 @@ API_KEY=your_api_key
 - Deployment Target: 13.0
 - Bundle ID: `com.nexvs.app`
 
+### Web
+- Responsive design with breakpoints
+- Constrained max-width for optimal desktop experience
+- Bottom navigation on mobile, navigation rail/sidebar on desktop
+
 ## Common Issues
 
 ### Build Errors
@@ -286,3 +319,29 @@ API_KEY=your_api_key
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [ObjectBox Documentation](https://objectbox.io/flutter/)
 - [Retrofit Dart](https://pub.dev/packages/retrofit)
+
+---
+
+## Iterative Learning Log
+
+This section captures lessons learned and corrections to improve accuracy over time.
+
+### 2025-02-06 - Initial Setup
+**Lesson:** User prefers to run the app themselves to see logs in the terminal.
+- **Action:** Never run `flutter run` without explicit request
+- **Reason:** User wants to control the execution and see real-time logs
+
+**CORRECTED:** Platform scope INCLUDES Web.
+- **Action:** Design adaptive layouts for Android, iOS, and Web
+- **Reason:** Project targets all platforms with responsive design
+- **Previous:** Was told "Android/iOS only" - this was incorrect
+
+**Lesson:** Git commits should only be made when user requests.
+- **Action:** Never create commits unprompted
+- **Reason:** User wants full control over commit timing and messages
+
+### 2025-02-06 - Web Support Decision
+**Lesson:** App should be adaptive, not mobile-only.
+- **Action:** Create responsive layouts with breakpoints
+- **Breakpoints:** Mobile (<768px), Tablet (768-1024px), Desktop (>=1024px)
+- **Navigation:** Bottom nav (mobile) → Navigation rail (tablet) → Sidebar (desktop)
